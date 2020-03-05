@@ -1,38 +1,78 @@
 Делаем свою CRUD API на Express и Mysql: часть первая
 
-Express один из самых популярных веб-фреймворков, который поддерживает роутинг, миддлвейрс и даже систему шаблонов. 
-Сегодня мы попробуем создать несложное CRUD API, используя базу данных Mysql. API мы будем создавать для несложной Todo, на тот случай, если кто-то захочет к своей todo присобачить немного немного бэка и поиграть с ним. 
+Express один из самых популярных веб-фреймворков, который поддерживает роутинг, миддлвейрс и  систему шаблонов.  Делать бэкенд на Node.js без Express в 2020 году - довольно странное занятие.  
+Сегодня мы попробуем создать несложое CRUD API, используя базу данных MySQL. Опытный читатель спросит, а где же MongoDB, с которой Node.js обычно применятся в паре, но скажем, это статья больше для PHP разработчиков, которые хотят немного потрогать Node.js, и чтобы смягчить немного им переход, мы воспользуемся MySQL. Наше API мы будем создавать для несложного Todo приложения,  на тот случай, если кто-то захочет к своей todo(и даже неважно, написанной с помощью React, или нет), присоединить немного немного бэка и поиграть с ним. 
 <h5> Архитектура суть нашего приложения</h5>
 В нашем приложении можно будет создавать, получать, обновлять и удалять Todo. В общем, у нас будет минимальный набор функций CRUD (create read update delete).
-
 В конце мы совместим наше приложение c приложением на  React и все протестируем. 
 Для начала приведу структуру нашего приложения:
-<img src="" alt="">
+<img src="https://habrastorage.org/webt/i_/ad/nq/i_adnqzj03nofwn7xqkgjki-ono.png" />
 
+
+Дальше я приведу таблицу действий и методов, которые есть в нашем приложении:
+<table>
+<thead>
+    <tr>
+        <th>Методы</th>
+        <th>Url</th>
+         <th> Действия</th>
+      </tr>
+</thead>
+<tbody>
+    <tr>
+        <th> GET</th>
+        <th>/deals</th>
+         <th>получение всех дел</th>
+      </tr>
+    <tr>
+        <th>GET</th>
+        <th>/deals/2</th>
+         <th>Получение id c номером 2</th>
+      </tr>
+    <tr>
+        <th>POST</th>
+        <th>/deals </th>
+         <th> добавление нового дела</th>
+      </tr>
+    <tr>
+        <th>PUT </th>
+        <th>/deals/3 </th>
+         <th> Обновить пользователя с id=3</th>
+      </tr>
+    <tr>
+        <th>DELETE </th>
+        <th>/deals/3 </th>
+         <th> удалить пользователя с id=3</th>
+      </tr>
+    <tr>
+        <th>DELETE </th>
+        <th>/deals </th>
+         <th> удалить всех пользователейя</th>
+      </tr>
+</tbody>
+</table>
 <h5> Создание своего Node.js приложения</h5>
-Переходим в вашу любимую директорирую, запускаем терминал и создаем ваше приложение. Кстати, наверное из заголовка понятно, что Node.js у вас уже должна быть установлена:
+Переходим в вашу любимую директорирую, запускаем терминал и создаем ваше приложение. Кстати, наверное из заголовка понятно, что Node.js у вас уже должна быть установлена. Если вы еще этого не сделали, то <strike>этого просто не может быть</strike> скачайте по <a href="https://nodejs.org/en/"> ссылке </a> отсюда. 
 <source>
     $ mkdir CRUD_API
     $ cd CRUD_API
 </source>
- Дальше нам нужно инициилизировать наше приложение с помощью npm init. Т.к. приложение у нас скорее тестовое и обучающее, я воспользуюсь командной, которая заполнит все по дефолту:
+ Дальше нам нужно инициилизировать наше приложение с помощью npm init. Т.к. приложение у нас скорее тестовое и обучающее, я воспользуюсь командной, которая заполнит все по дефолту, чтобы не тратить время на мелкие детали:
  <source>
  npm init -y
  </source>
-
-Если что, потом руками в package.json поменяю данные на те, которые мне нужны: репозиторий github, тэги, автора, и т.д. 
-Дальше нам нужно поставить все необходимые для работы нашего приложения пакеты:
+Если что, потом руками в package.json вы сможете поменять данные на те, которые вам нужны: репозиторий github, тэги, автора, и т.д. 
+Потом нам нужно поставить все необходимые для работы нашего приложения пакеты:
 <source>
 npm i express mysql body-parser --save
 </source>
-Если вы собираетесь отправлять потом вашу разработку на github, вам стоит создать скрытый файл .gitignore, чтобы не таскать с собой тяжелейшие node_modules  (и не позориться).Пишем:
+Если вы собираетесь отправлять потом вашу разработку на github, вам стоит создать скрытый файл .gitignore, чтобы не таскать с собой тяжелейшие node_modules <strike>и не позориться</strike>  .Пишем:
 <source>
     touch .gitignore 
     code .gitignore 
 </source>
-Там пишем node_modules, потом вы сможете добавлять туда те файлы, которые вы хотите, чтобы они попали в слежение git.
-
- <h3> Базовая настройка Express</h3>
+Там пишем туда node_modules, в дальнейшем в этот файл вы сможете вписать наименования папок и файлов, которые вы хотите увидеть потом на удаленном сервере.
+<h3> Базовая настройка Express</h3>
 В корневой папки проекта создаем файл server.js: 
 <source lang="javascript">
     const express = require("express");
@@ -57,13 +97,16 @@ npm i express mysql body-parser --save
       console.log("Сервер запущен на 3001 порту");
     });
 </source>
-
 Теперь мы можем запустить наш сервер  с помощью:
 <source>
 node server.js
 </source>
+
+
+//здесь нужно расписать про пакеты
+
  <h5>Создаем свою таблицу данных MySQL</h5>
-Я очень надеюсь, что у читателя данной статьи нет проблемы с тем, чтобы самостоятельно скачать и установить MySQL и MySQLWorkBranch. Дальше вы самостоятельно создаете  scheme с названием, которое вам больше нравится, и потом выбрать молнию-запрос и скопировать/набрать следующую команду:
+Я очень надеюсь, что у читателя данной статьи нет проблемы с тем, чтобы самостоятельно скачать и установить MySQL и MySQLWorkBranch. Дальше вы самостоятельно создаете  scheme с названием, которое вам больше нравится (в моем случае TODO), и потом выбрать молнию-запрос и скопировать/набрать следующую команду:
 <source lang="sql">
     CREATE TABLE IF NOT EXISTS `todo` (
         id int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
@@ -74,4 +117,156 @@ node server.js
 
 
 <h5> Конфигурация & коннект с нашей базой данных</h5>
+Давайте установим и сконфигурируем наше соедниение с базой данных. Мы создадим новую папку app прямо в нашей корневой папке, и там создадим файл db.config.js в папке config вот примерно с таким содержанием, которое зависиит от ваших настроек в MySQLWorkBranch. В моем случае файл будет выглядеть вот так:
+<source lang='javascript'>
 
+  module.exports = {
+    HOST: "localhost",
+    USER: "pavel",
+    PASSWORD: "",
+    DB: "TODO"
+  };
+</source>
+После этого, мы создаем папку для описания наших моделей  app/mode, в которой мы потом создадим модель:
+<source>
+
+  const mysql = require("mysql");
+  const dbConfig = require("../config/db.config.js");
+  
+  //  создаем соединение с нашей базой данных
+  const connection = mysql.createConnection({
+    host: dbConfig.HOST,
+    user: dbConfig.USER,
+    password: dbConfig.PASSWORD,
+    database: dbConfig.DB
+  });
+  
+  // открываем наше соединение с базой данных
+  connection.connect(err => {
+    if (err) throw error;
+    console.log("успешно соединено с базой данных");
+  });
+
+  module.exports = connection;
+   //экспортируем наше соединение
+</source>
+<h5> Создаем Модель </h5>
+ В папке model, мы создаем файл, который называется deal.model.js. Я собираюсь создать конструктор для Deal объекта, и использовать connection для следующих CRUD функций:
+ <ul>
+
+  <li> создание нового дела</li>
+  <li> нахождение дела по id</li>
+  <li> получение всех дел</li>
+  <li> возможность обновлять наше дело по id</li>
+  <li> Удаление одного дела по id</li>
+  <li>  полное удаление всех дел</li>
+ </ul>
+ Итого, нам придется занятсья следующими делами:
+ <source lang="javascript"> 
+  // конструктор нашего дела
+  const Deal = function(deal) {
+    this.text = deal.text;
+  };
+  
+  Deal.create = (newDeal, result) => {
+    sql.query("INSERT INTO TODO SET ?", newDeal, (err, res) => {
+      if (err) {
+        console.log("error: ", err);
+        result(err, null);
+        return;
+      }
+  
+      console.log("Создано дело", { id: res.insertId, ...newDeal });
+      result(null, { id: res.insertId, ...newDeal });
+    });
+  };
+  
+  Deal.findById = (dealId, result) => {
+    sql.query(`SELECT * FROM TODO WHERE id = ${dealId}`, (err, res) => {
+      if (err) {
+        console.log("error: ", err);
+        result(err, null);
+        return;
+      }
+  
+      if (res.length) {
+        console.log("найдено дело: ", res[0]);
+        result(null, res[0]);
+        return;
+      }
+  
+      // когда ничего не удалось найти
+      result({ kind: "not_found" }, null);
+    });
+  };
+  
+   Deal.getAll = result => {
+    sql.query("SELECT * FROM TODO", (err, res) => {
+      if (err) {
+        console.log("error: ", err);
+        result(null, err);
+        return;
+      }
+  
+      console.log("deals: ", res);
+      result(null, res);
+    });
+  };
+  
+  Deal.updateById = (id, deal, result) => {
+    sql.query(
+      "UPDATE TODO SET name = ?  WHERE id = ?",
+      [deal.text, id],
+      (err, res) => {
+        if (err) {
+          console.log("error: ", err);
+          result(null, err);
+          return;
+        }
+  
+        if (res.affectedRows == 0) {
+          result({ kind: "not_found" }, null);
+          return;
+        }
+  
+        console.log("Обновлено дело ", { id: id, ...deal });
+        result(null, { id: id, ...deal });
+      }
+    );
+  };
+  
+  Deal.remove = (id, result) => {
+    sql.query("DELETE FROM TODO WHERE id = ?", id, (err, res) => {
+      if (err) {
+        console.log("error: ", err);
+        result(null, err);
+        return;
+      }
+  
+      if (res.affectedRows == 0) {
+        //  если дело не удалось получить по id
+        result({ kind: "not_found" }, null);
+        return;
+      }
+  
+      console.log("Удален пользователь с  ", id);
+      result(null, res);
+    });
+  };
+  
+  Deal.removeAll = result => {
+    sql.query("DELETE FROM TODO", (err, res) => {
+      if (err) {
+        console.log("error: ", err);
+        result(null, err);
+        return;
+      }
+  
+      console.log(`deleted ${res.affectedRows} deals`);
+      result(null, res);
+    });
+  };
+  
+ </source>
+
+ На этом пока все. На подходе следующая часть этой статьи, в которой мы закончим написание нашего бэека и примемся за его тестирование. 
